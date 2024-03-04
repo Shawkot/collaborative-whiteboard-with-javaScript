@@ -374,63 +374,30 @@ window.onload = function () {
 
     // Mouse Down Event
     canvas.addEventListener('mousedown', function (event) {
-        lastEvent = event;
-        isMousePressed = true;
-        console.log("move started");
-        currentMove = [];
-    });
-
+    	if (mode === "brush") {
+        	isMousePressed = true;
+        	context.beginPath();
+        	context.moveTo(event.offsetX, event.offsetY);
+   	 }
+    	lastEvent = event;
+    	currentMove = [];
+	});
     // Mouse Move Event
     canvas.addEventListener('mousemove', function (event) {
-        if (isMousePressed) {
-            context.beginPath();
-            if (mode === "brush") {
-                // Set brush size and color
-                context.strokeStyle = 'black';
-                context.lineWidth = 1;
-                // Set composite operation to drawing over
-                context.globalCompositeOperation = "source-over";
-                // Draw line segment
-                context.moveTo(lastEvent.offsetX, lastEvent.offsetY);
-                context.lineTo(event.offsetX, event.offsetY);
-                context.stroke();
-
-                currentMove.push({
-                    lastX: lastEvent.offsetX,
-                    lastY: lastEvent.offsetY,
-                    currX: event.offsetX,
-                    currY: event.offsetY,
-                });
-
-                // Emit drawing event
-                var dataToSend = {
-                    moveToX: lastEvent.offsetX,
-                    moveToY: lastEvent.offsetY,
-                    lineToX: event.offsetX,
-                    lineToY: event.offsetY
-                }
-                sendData(socket, 'freehand-drawing', dataToSend);
-            } else if (mode === "eraser") {
-                context.globalCompositeOperation = 'destination-out';
-                context.arc(lastEvent.offsetX, lastEvent.offsetY, 30, 0, Math.PI * 2, false);
-                context.fill();
-                // Emit erase event
-                currentMove.push({
-                    lastX: lastEvent.offsetX,
-                    lastY: lastEvent.offsetY,
-                });
-                var dataToSend = {
-                    arcX: lastEvent.offsetX,
-                    arcY: lastEvent.offsetY
-                }
-                sendData(socket, 'erase', dataToSend);
-            }
-            lastEvent = event;
-        }
-    });
-
+    if (isMousePressed && mode === "brush") {
+        context.lineTo(event.offsetX, event.offsetY);
+        context.stroke();
+        currentMove.push({
+            lastX: lastEvent.offsetX,
+            lastY: lastEvent.offsetY,
+            currX: event.offsetX,
+            currY: event.offsetY,
+        });
+        lastEvent = event;
+    }
+  });
     // Mouse Up Event
-    canvas.addEventListener('mouseup', function (event) {
+     canvas.addEventListener('mouseup', function (event) {
         moveToSave = currentMove;
         isMousePressed = false;
         console.log("move finished");
@@ -707,8 +674,6 @@ window.onload = function () {
 
     function addNewStickyNote(stickyNoteId, author, socket) {
         var $stickyNote = $('<div class="sticky-note"></div>');
-        $stickyNote.css('font-family', 'Arial, sans-serif'); // Add this line to font change
-
         $stickyNote.attr('id', stickyNoteId);
         var $stickyNoteHeader = $('<div class="sticky-note-header"></div>');
         var $textareaDiv = $('<div class="textarea" contenteditable></div>');
@@ -902,4 +867,4 @@ window.onload = function () {
             `)
         });
     };
-}   
+}
