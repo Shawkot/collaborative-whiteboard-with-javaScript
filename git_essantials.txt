@@ -1,0 +1,55 @@
+Setting up git
+
+Authentication:
+
+1. install GCM and pass to save personal access tokens
+
+	https://github.com/git-ecosystem/git-credential-manager/blob/main/README.md
+
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+2. Creating personal access token (classic)
+
+	https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	
+3. Adding a local repository to GitHub using Git
+
+	https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github#adding-a-local-repository-to-github-using-git
+	
+	https://www.freecodecamp.org/news/create-and-sync-git-and-github-repositories/
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Sync local and remote repo:
+
+git fetch
+git merge origin/master
+git pull origin master # shortcut for the above two
+
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+git rebase master test # sync test branch with master.
+
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Pull request:
+At first, push your current branch, then create a pull request.
+gh pr create --fill
+
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 
+
+
+# Push locally created branch
+git branch test
+git push origin test
+
+.........................................
+
+# fetch remote branch locally
+If the remote branch is not showing locally try the following:
+git fetch -a
+if still not showing:
+git branch checkout -b branch-name origin/branch-name # this will track the remote branch-name with the local one.
+
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
