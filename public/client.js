@@ -73,7 +73,10 @@ window.onload = function () {
         $brushLink.addClass("selected");
         $eraserLink.removeClass("selected");
         $(canvas).css("cursor", "url('images/cursor-brush.cur'), auto");
-    })
+        context.globalCompositeOperation = "source-over";
+        context.lineWidth = 1; // Set to your desired brush width
+        context.strokeStyle = 'black'; // Set to your desired brush color
+    });
 
     $eraserLink.on('click', () => {
         mode = "eraser";
@@ -374,34 +377,43 @@ window.onload = function () {
 
     // Mouse Down Event
     canvas.addEventListener('mousedown', function (event) {
-    	if (mode === "brush") {
-        	isMousePressed = true;
-        	context.beginPath();
-        	context.moveTo(event.offsetX, event.offsetY);
-   	 }
-    	lastEvent = event;
-    	currentMove = [];
-	});
+        if (mode === "brush") {
+            isMousePressed = true;
+            context.beginPath();
+            context.moveTo(event.offsetX, event.offsetY);
+        } else if (mode === "eraser") {
+            isMousePressed = true;
+            context.globalCompositeOperation = "destination-out";
+            context.beginPath();
+            context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2, false);
+            context.fill();
+        }
+        lastEvent = event;
+        currentMove = [];
+    });
     // Mouse Move Event
     canvas.addEventListener('mousemove', function (event) {
-    if (isMousePressed && mode === "brush") {
-        context.lineTo(event.offsetX, event.offsetY);
-        context.stroke();
-        currentMove.push({
-            lastX: lastEvent.offsetX,
-            lastY: lastEvent.offsetY,
-            currX: event.offsetX,
-            currY: event.offsetY,
-        });
-        lastEvent = event;
-    }
-  });
+        if (isMousePressed && mode === "brush") {
+            context.lineTo(event.offsetX, event.offsetY);
+            context.stroke();
+            currentMove.push({
+                lastX: lastEvent.offsetX,
+                lastY: lastEvent.offsetY,
+                currX: event.offsetX,
+                currY: event.offsetY,
+            });
+            lastEvent = event;
+        } else if (isMousePressed && mode === "eraser") {
+            context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2, false);
+            context.fill();
+        }
+    });
     // Mouse Up Event
-     canvas.addEventListener('mouseup', function (event) {
+    canvas.addEventListener('mouseup', function (event) {
         moveToSave = currentMove;
         isMousePressed = false;
         console.log("move finished");
-
+    
         var dataToSend = {
             userId: socket.id,
             moves: moveToSave,
