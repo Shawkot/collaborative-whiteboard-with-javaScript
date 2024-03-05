@@ -26,11 +26,7 @@ Session Management: Join or leave sessions at your convenience. Hosts can end se
 - [ ] Enhanced Real-Time Collaboration: Plans to evolve the whiteboard for improved synchronous interaction among a greater number of users.
 - [ ] UI Improvements: Ongoing development focused on refining user interface components for an even more intuitive and engaging user experience.
 
-# Contributions
-
-If you notice any issue with this application, you can help us by reporting it with a new issue in this repository.
-
-## Installation Guide
+# Installation Guide
 To get started with the Collaborative Whiteboard, follow these simple steps:
 - Prerequisites: Ensure MongoDB is installed on your system.
 - Clone the Repository: Download the source code by cloning the repository.
