@@ -480,7 +480,7 @@ window.onload = function () {
     var imageLoader = document.getElementById('imageLoader');
     imageLoader.addEventListener('change', function (e) {
         var uploadImagePositionSelector = document.createElement("div");
-        uploadImagePositionSelector.innerText = "Please click on the board on the position where you would like to display your image (you are selecting the upper left corner of the image):";
+        uploadImagePositionSelector.innerText = " ";
         uploadImagePositionSelector.id = "upload-image-position-selector";
         uploadImagePositionSelector.addEventListener('click', function (clickEvent) {
             var reader = new FileReader();
@@ -688,7 +688,7 @@ window.onload = function () {
         var $stickyNote = $('<div class="sticky-note"></div>');
         $stickyNote.attr('id', stickyNoteId);
         var $stickyNoteHeader = $('<div class="sticky-note-header"></div>');
-        var $textareaDiv = $('<div class="textarea" contenteditable></div>');
+        var $textareaDiv = $('<div class="textarea" contenteditable="true"></div>');
         // var $createdByHeader = $('<div class="created-by-header">Created by:<br/>' + author + '</div>');
         var $stickyNoteDeleteDiv = $('<div class="sticky-note-delete-icon"><a href="#"><i class="ri-close-circle-line"></i></a></div>');
         $stickyNoteHeader.append($stickyNoteDeleteDiv);
@@ -873,7 +873,7 @@ window.onload = function () {
         $participantsListDiv.html("");
         participants.forEach(p => {
             $participantsListDiv.append(`
-                <div class="participant" id="participant-${p.id}" style="background: linear-gradient(to top right, ${p.backgroundColor}, rgb(var(--light-teal)));" title="${p.username}">
+                <div class="participant" id="participant-${p.id}" style="background: lightblue;" title="${p.username}">
                     ${p.username.charAt(0)}
                 </div>
             `)
