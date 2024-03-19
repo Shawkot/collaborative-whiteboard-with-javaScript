@@ -111,16 +111,17 @@ MongoClient.connect(uri, {
         })
 
         socket.on('freehand-drawing', (message) => {
-            message = decryptMessage(message);
-            var dataToSend = {
-                type: 'freehand-drawing',
-                moveToX: message.moveToX,
-                moveToY: message.moveToY,
-                lineToX: message.lineToX,
-                lineToY: message.lineToY
-            }
-            broadcastData(socket, dataToSend);
-        });
+			message = decryptMessage(message);
+			var dataToSend = {
+				type: 'freehand-drawing',
+				moveToX: message.moveToX,
+				moveToY: message.moveToY,
+				lineToX: message.lineToX,
+				lineToY: message.lineToY,
+				points: message.points  // Add this line
+			}
+			broadcastData(socket, dataToSend);
+		});
 
         socket.on('new-move', (data, callback) => {
             data = decryptMessage(data);

@@ -408,28 +408,44 @@ window.onload = function () {
             context.fill();
         }
     });
-    // Mouse Up Event
-    canvas.addEventListener('mouseup', function (event) {
-        moveToSave = currentMove;
-        isMousePressed = false;
-        console.log("move finished");
-    
-        var dataToSend = {
-            userId: socket.id,
+		// Mouse Up Event
+canvas.addEventListener('mouseup', function (event) {
+    moveToSave = currentMove;
+    isMousePressed = false;
+    console.log("move finished");
+
+    var dataToSend = {
+        userId: socket.id,
+        moves: moveToSave,
+        moveType: mode
+    }
+
+    var callback = (data) => {
+        console.log("saving move");
+        moves.push({
             moves: moveToSave,
+            _id: data._id,
+            userId: socket.id,
             moveType: mode
+        });
+    }
+
+    // Send 'new-move' event to server
+    sendData(socket, 'new-move', dataToSend, callback);
+
+    // If the move type is 'brush', also send a 'freehand-drawing' event to server
+    if (mode === 'brush') {
+        var drawingDataToSend = {
+            type: 'freehand-drawing',
+            moveToX: moveToSave[0].currX,  // Assuming moveToSave[0] is the start point
+            moveToY: moveToSave[0].currY,
+            lineToX: moveToSave[moveToSave.length - 1].currX,  // Assuming moveToSave[moveToSave.length - 1] is the end point
+            lineToY: moveToSave[moveToSave.length - 1].currY
         }
-        var callback = (data) => {
-            console.log("saving move");
-            moves.push({
-                moves: moveToSave,
-                _id: data._id,
-                userId: socket.id,
-                moveType: mode
-            });
-        }
-        sendData(socket, 'new-move', dataToSend, callback);
-    });
+        sendData(socket, 'freehand-drawing', drawingDataToSend);
+    }
+});
+
 
     const lastIndexOf = (array, key) => {
         for (let i = array.length - 1; i >= 0; i--) {
