@@ -249,7 +249,7 @@ window.onload = function () {
         socket.on('broadcast', (message) => {
             message = JSON.parse(CryptoJS.AES.decrypt(message, encryptionKey).toString(CryptoJS.enc.Utf8));
             switch (message.type) {
-                case 'freehand-drawing':
+                case 'draw-move':
                     context.beginPath();
                     // Set brush size and color
                     context.strokeStyle = 'black';
@@ -340,6 +340,7 @@ window.onload = function () {
         })
     })
 
+
     endSessionButton.addEventListener('click', (e) => {
         e.preventDefault();
         if (sessionStarted) {
@@ -375,76 +376,64 @@ window.onload = function () {
         }
     });
 
-    // Mouse Down Event
-    canvas.addEventListener('mousedown', function (event) {
-        if (mode === "brush") {
-            isMousePressed = true;
-            context.beginPath();
-            context.moveTo(event.offsetX, event.offsetY);
-        } else if (mode === "eraser") {
-            isMousePressed = true;
-            context.globalCompositeOperation = "destination-out";
-            context.beginPath();
-            context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2, false);
-            context.fill();
-        }
-        lastEvent = event;
-        currentMove = [];
-    });
-    // Mouse Move Event
-    canvas.addEventListener('mousemove', function (event) {
-        if (isMousePressed && mode === "brush") {
-            context.lineTo(event.offsetX, event.offsetY);
-            context.stroke();
-            currentMove.push({
-                lastX: lastEvent.offsetX,
-                lastY: lastEvent.offsetY,
-                currX: event.offsetX,
-                currY: event.offsetY,
-            });
-            lastEvent = event;
-        } else if (isMousePressed && mode === "eraser") {
-            context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2, false);
-            context.fill();
-        }
-    });
-		// Mouse Up Event
-canvas.addEventListener('mouseup', function (event) {
-    moveToSave = currentMove;
-    isMousePressed = false;
-    console.log("move finished");
+   // Mouse Down Event: Initiate drawing
+   let lastX = 0;
+   let lastY = 0;
+   
+   canvas.addEventListener('mousedown', function(event) {
+       isMousePressed = true;
+       context.beginPath();
+       context.moveTo(event.offsetX, event.offsetY);
+       lastX = event.offsetX;
+       lastY = event.offsetY;
+   });
+   
+   // Mouse Move Event
+   canvas.addEventListener('mousemove', function(event) {
+       if (isMousePressed && mode === "brush") {
+           context.lineTo(event.offsetX, event.offsetY);
+           context.stroke();
+           // Emit real-time drawing data to the server
+           sendData(socket, 'draw-move', { moveToX: lastX, moveToY: lastY, lineToX: event.offsetX, lineToY: event.offsetY });
+           lastX = event.offsetX;
+           lastY = event.offsetY;
+       } else if (isMousePressed && mode === "eraser") {
+           context.globalCompositeOperation = 'destination-out';
+           context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2);
+           context.fill();
+       }
+   });
+   
 
-    var dataToSend = {
-        userId: socket.id,
-        moves: moveToSave,
-        moveType: mode
-    }
+	// Mouse Up Event: Complete the drawing action
+	canvas.addEventListener('mouseup', function (event) {
+		if (isMousePressed && currentMove.length > 0 && mode === "brush") {
+			console.log("move finished");
 
-    var callback = (data) => {
-        console.log("saving move");
-        moves.push({
-            moves: moveToSave,
-            _id: data._id,
-            userId: socket.id,
-            moveType: mode
-        });
-    }
+			// sending the complete set of drawing actions for this stroke to the server
+			var dataToSend = {
+				userId: socket.id,
+				moves: currentMove,
+				moveType: mode
+			};
+			sendData(socket, 'new-move', dataToSend);
 
-    // Send 'new-move' event to server
-    sendData(socket, 'new-move', dataToSend, callback);
+			currentMove = []; // Clear currentMove array for next drawing action
+		}
+		isMousePressed = false; // Reset isMousePressed flag
+	});
 
-    // If the move type is 'brush', also send a 'freehand-drawing' event to server
-    if (mode === 'brush') {
-        var drawingDataToSend = {
-            type: 'freehand-drawing',
-            moveToX: moveToSave[0].currX,  // Assuming moveToSave[0] is the start point
-            moveToY: moveToSave[0].currY,
-            lineToX: moveToSave[moveToSave.length - 1].currX,  // Assuming moveToSave[moveToSave.length - 1] is the end point
-            lineToY: moveToSave[moveToSave.length - 1].currY
-        }
-        sendData(socket, 'freehand-drawing', drawingDataToSend);
-    }
-});
+
+	// Receiving the drawing state when joining and redraw the canvas accordingly
+	socket.on('drawing-state', (drawingState) => {
+		context.beginPath();
+		drawingState.forEach((line) => {
+			context.moveTo(line.moveToX, line.moveToY);
+			context.lineTo(line.lineToX, line.lineToY);
+			context.stroke();
+		});
+		context.closePath();
+	});
 
 
     const lastIndexOf = (array, key) => {

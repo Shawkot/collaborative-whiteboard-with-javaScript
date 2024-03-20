@@ -16,6 +16,7 @@ let hostDisconnectedTriggered;
 let hostEndSessionTriggered;
 let encryptionKey;
 let sessionParticipants = [];
+let drawingState = [];
 
 MongoClient.connect(uri, {
     useUnifiedTopology: true
@@ -110,42 +111,86 @@ MongoClient.connect(uri, {
 
         })
 
-        socket.on('freehand-drawing', (message) => {
-			message = decryptMessage(message);
-			var dataToSend = {
-				type: 'freehand-drawing',
+
+
+
+
+        // Handle real-time drawing updates
+
+		socket.on('draw-move', (encryptedData) => {
+			let message = decryptMessage(encryptedData);
+
+			// Prepare data for broadcasting
+			let drawingData = {
+				type: 'draw-move',
 				moveToX: message.moveToX,
 				moveToY: message.moveToY,
 				lineToX: message.lineToX,
 				lineToY: message.lineToY,
-				points: message.points  // Add this line
-			}
-			broadcastData(socket, dataToSend);
+				points: message.points
+			};
+
+			// Broadcast the drawing move to other clients for real-time updates
+			broadcastData(socket, drawingData);
 		});
 
-        socket.on('new-move', (data, callback) => {
-            data = decryptMessage(data);
-            let newMove = {
-                userId: data.userId,
-                moves: data.moves,
-                moveType: data.moveType
-            }
-            dbo.collection('operations').insertOne(newMove, (err, records) => {
-                if (err) throw err;
-                var dataToSend = {
-                    type: "new-move",
-                    _id: records.ops[0]._id,
-                    moves: newMove.moves,
-                    userId: newMove.userId,
-                    moveType: newMove.moveType
-                }
-                broadcastData(socket, dataToSend);
-                callback({
-                    _id: records.ops[0]._id
-                })
-                console.log("new move recorded with id: ", records.ops[0]._id);
-            })
-        });
+
+
+		// Handle completed drawing moves for saving to the database
+		socket.on('new-move', (encryptedData, callback) => {
+			let message = decryptMessage(encryptedData);
+			let newMove = {
+				userId: message.userId,
+				moves: message.moves,
+				moveType: message.moveType
+			};
+
+			dbo.collection('operations').insertOne(newMove, (err, records) => {
+				if (err) throw err;
+
+				let dataToSend = {
+					type: "new-move",
+					_id: records.ops[0]._id,
+					moves: message.moves,
+					userId: message.userId,
+					moveType: message.moveType
+				};
+
+				// Broadcast the saved move or handle as needed
+				broadcastData(socket, dataToSend);
+
+				// Callback to the client, if necessary
+				if (callback) callback({ _id: records.ops[0]._id });
+			});
+		});
+
+
+
+
+socket.on('connection', (socket) => {
+    // Send the current drawing state to the newly connected client
+    socket.emit('drawing-state', drawingState);
+
+    // Handle real-time drawing updates
+    socket.on('draw-move', (data) => {
+        // Add the new drawing move to the drawing state
+        drawingState.push(data);
+
+        // Broadcast the drawing move to other clients for real-time updates
+        socket.broadcast.emit('draw-move', data);
+    });
+
+    // Other existing socket event listeners...
+});
+
+// Client-side (in your JavaScript handling drawing)
+socket.on('drawing-state', (drawingState) => {
+    // Use the drawingState to reconstruct the canvas for the newly connected user
+    drawingState.forEach((move) => {
+        // Use your drawing function here to replay the drawing actions
+    });
+});
+
 
         socket.on('erase', (message) => {
             message = decryptMessage(message);
