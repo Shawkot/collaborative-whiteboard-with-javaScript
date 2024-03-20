@@ -389,20 +389,22 @@ window.onload = function () {
    });
    
    // Mouse Move Event
-   canvas.addEventListener('mousemove', function(event) {
-       if (isMousePressed && mode === "brush") {
-           context.lineTo(event.offsetX, event.offsetY);
-           context.stroke();
-           // Emit real-time drawing data to the server
-           sendData(socket, 'draw-move', { moveToX: lastX, moveToY: lastY, lineToX: event.offsetX, lineToY: event.offsetY });
-           lastX = event.offsetX;
-           lastY = event.offsetY;
-       } else if (isMousePressed && mode === "eraser") {
-           context.globalCompositeOperation = 'destination-out';
-           context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2);
-           context.fill();
-       }
-   });
+	canvas.addEventListener('mousemove', function(event) {
+		if (isMousePressed && mode === "brush") {
+			context.lineTo(event.offsetX, event.offsetY);
+			context.stroke();
+			// Emit real-time drawing data to the server
+			sendData(socket, 'draw-move', { moveToX: lastX, moveToY: lastY, lineToX: event.offsetX, lineToY: event.offsetY });
+			lastX = event.offsetX;
+			lastY = event.offsetY;
+		} else if (isMousePressed && mode === "eraser") {
+			context.globalCompositeOperation = 'destination-out';
+			context.arc(event.offsetX, event.offsetY, 10, 0, Math.PI * 2);
+			context.fill();
+			// Emit real-time erasing data to the server
+			sendData(socket, 'erase', { arcX: event.offsetX, arcY: event.offsetY });
+		}
+	});
    
 
 	// Mouse Up Event: Complete the drawing action
