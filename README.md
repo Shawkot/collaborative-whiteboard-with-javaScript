@@ -31,6 +31,6 @@ To get started with the Collaborative Whiteboard, follow these simple steps:
 - Prerequisites: Ensure MongoDB is installed on your system.
 - Clone the Repository: Download the source code by cloning the repository.
 - Project Setup: Navigate to the project directory in your terminal.
-- Dependencies: Execute `npm install dotenc` followed by `npm install` to install all necessary dependencies.
+- Dependencies: Execute `npm install dotenv` followed by `npm install` to install all necessary dependencies.
 - Start the Application: Run `npm run start` to launch the server.
 - Access the Application: Open a web browser and navigate to `localhost:3000` to start using the whiteboard.
