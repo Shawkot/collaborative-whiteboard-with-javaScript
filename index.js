@@ -202,19 +202,38 @@ socket.on('drawing-state', (drawingState) => {
             broadcastData(socket, dataToSend);
         });
 
+        
         socket.on('undo', (data) => {
-            data = decryptMessage(data);
-            // DELETE FROM DATABASE
-            dbo.collection('operations').deleteOne({ _id: ObjectId(data._id) }, (err, res) => {
-                if (err) throw err;
-                console.log("move deleted");
-            })
-            var dataToSend = {
-                type: 'undo',
-                _id: data._id
+            try {
+                data = decryptMessage(data);
+                // validate and sanitize data
+                if(!data || !data._id || !ObjectId.isValid(data._id)) {
+                    throw new Error('Invalid data');
+                }
+
+                // check user authorization
+                if(!isUserAuthorized(data.userId, data._id)) {
+                    throw new Error('Unauthorized operations!')
+                }
+
+                // DELETE FROM DATABASE
+                dbo.collection('operations').deleteOne({ _id: ObjectId(data._id) }, (err, res) => {
+                    if (err) {
+                        console.log('Database error:', err);
+                        return;
+                    }
+                    console.log("move deleted");
+                })
+                var dataToSend = {
+                    type: 'undo',
+                    _id: data._id
+                }
+                broadcastData(socket, dataToSend);
+                console.log("undo operation");
+            } catch(error) {
+                console.error('Error handling undo operation:', error);
             }
-            broadcastData(socket, dataToSend);
-            console.log("undo operation");
+            
         })
 
         socket.on('image-upload', (message) => {
